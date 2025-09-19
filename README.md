@@ -70,28 +70,49 @@ npx playwright show-report
 
 -----
 
-## 📂 Project Structure
+## 🔄 CI/CD with GitHub Actions
 
-The project is structured to be clean and scalable.
+This project includes a **GitHub Actions workflow** to automate test runs on every push to the `main` branch and on all pull requests. This ensures that new code changes do not introduce regressions.
 
-```
-/
-├── e2e/
-│   ├── tests/                  # Test files containing the test scenarios
-│   │   ├── Login.test.ts
-│   │   ├── Products.test.ts
-│   │   └── Cart.test.ts
-│   ├── pages/                  # Page Object Model classes
-│   │   ├── PageBase.ts         # Base class for common actions
-│   │   ├── LoginPage.ts
-│   │   ├── ProductsPage.ts
-│   │   └── CartPage.ts
-│   ├── data/                   # Externalized test data
-│   │   └── testData.ts
-│   ├── fixtures/               # Playwright test fixtures for Page Objects
-│   │   └── fixtures.ts
-│
-├── playwright.config.ts        # Playwright configuration file
-├── tsconfig.json               # TypeScript configuration file
-└── package.json                # Project dependencies and scripts
+### **How it Works**
+
+The workflow is configured in `.github/workflows/playwright.yml`. It performs the following steps:
+
+1.  **Checkout Code**: Checks out the repository code.
+2.  **Setup Node.js**: Installs a specific version of Node.js.
+3.  **Install Dependencies**: Installs the project's dependencies.
+4.  **Install Playwright Browsers**: Installs the browsers required by Playwright (e.g., Chromium, Firefox, WebKit).
+5.  **Run Tests**: Executes the test suite using `npx playwright test`.
+
+### **Workflow File**
+
+```yaml
+name: Playwright Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps
+    - name: Run Playwright tests
+      run: npx playwright test
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30
 ```
